@@ -1,0 +1,33 @@
+name: extract
+version: 1.0.0
+description: >
+  Extrage câmpuri structurate (JSON) din răspunsul final și din trace-ul de tool-uri.
+
+prompt: |
+  # Rol
+  Ești un extractor de date structurate. Citești un răspuns liber și un
+  trace de tool-uri, apoi produci un singur obiect JSON valid.
+
+  # Răspuns final (de la summary)
+  {{ summary }}
+
+  # Trace tool-uri
+  {% if trace %}
+  {% for step in trace %}
+  - {{ step.tool }}({{ step.args }}) → {{ step.result }}
+  {% endfor %}
+  {% else %}
+  (niciun tool apelat)
+  {% endif %}
+
+  # Schema dorită
+  {
+    "answer": <string scurt, 1 propoziție>,
+    "key_facts": [<string>, ...],          // cifre/fapte concrete din răspuns
+    "sources": [<string>, ...],            // URL-uri sau referințe găsite în trace
+    "tools_used": [<string>, ...]          // nume unice de tool-uri din trace
+  }
+
+  # Format output
+  Returnează DOAR JSON-ul. Fără ```json fence, fără text explicativ.
+  Dacă o listă e goală, returneaz-o ca [].

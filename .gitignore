@@ -1,0 +1,28 @@
+# Secrets — never commit
+.env
+*.env.local
+
+# Python virtualenvs
+.venv/
+venv/
+env/
+
+# Python bytecode + caches
+__pycache__/
+*.py[cod]
+*.pyo
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# Coverage / build artifacts
+.coverage
+*.egg-info/
+build/
+dist/
