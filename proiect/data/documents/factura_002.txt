@@ -1,0 +1,40 @@
+FACTURA FISCALA
+Nr. FV-2024-002
+Data: 22.03.2024
+
+FURNIZOR:
+SC WebDev Expert SRL
+CUI: RO23456789
+J40/2345/2021
+Str. Progresului nr. 78, Cluj-Napoca
+Cont IBAN: RO62BRDE445SV00123456789
+
+CLIENT:
+SC Retail Plus SRL
+CUI: RO34567890
+J12/3456/2018
+Str. Comercială nr. 5, Timișoara
+
+SERVICII PRESTATE:
+--------------------------------------------------------------------------------
+Nr. | Descriere serviciu                          | Cantitate | Preț    | Valoare
+--------------------------------------------------------------------------------
+1   | Dezvoltare website e-commerce               | 1         | 8.500,00| 8.500,00
+2   | Integrare sistem de plăți online            | 1         | 2.000,00| 2.000,00
+3   | Configurare hosting și domeniu (1 an)       | 1         | 450,00  | 450,00
+4   | Training utilizare platformă (8 ore)        | 8         | 150,00  | 1.200,00
+5   | Mentenanță lunară (3 luni)                  | 3         | 300,00  | 900,00
+--------------------------------------------------------------------------------
+
+SUBTOTAL:                                                         13.050,00 RON
+TVA (19%):                                                         2.479,50 RON
+--------------------------------------------------------------------------------
+TOTAL DE PLATĂ:                                                   15.529,50 RON
+
+Perioada prestării: 01.02.2024 - 20.03.2024
+Termen de plată: 15 zile de la emitere
+Modalitate de plată: Transfer bancar
+
+Factură emisă de: Alexandru Popa
+Semnătura furnizor: _________________
+

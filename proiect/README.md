@@ -1,27 +1,55 @@
-# Agent QA cu Tools + Prompts
+# Document Analyst cu RAG (Tema 2 — L3 + L4)
 
-Tema 1 (lecția 2): agent ReAct care răspunde la întrebări factuale folosind
-tool-uri (`calculator`, `get_datetime`, `web_search`) și un pipeline de
-prompt-uri YAML (planner → analyst → summary → extract).
+Pipeline de **extracție + storage cu pgvector**, conectat la agentul ReAct din Tema 1
+(L1–L2). Documentele (facturi / contracte) sunt încărcate, fragmentate, extrase
+structurat, vectorizate și stocate în Postgres; agentul răspunde la întrebări despre
+ele printr-un tool RAG `search_documents`.
+
+> Construit pe agentul din Tema 1 (`main`) — vezi secțiunea *Istoric pe branch-uri*.
+
+## Flow
+
+```
+pipeline.py:  load(file) ─► split(800,100) ─► extract(Invoice|Contract) ─► embed ─► store
+              (registry      RecursiveChar      LLM.with_structured_       sentence-   Document
+               pe extensie)  TextSplitter       output)                   transformers + Chunks)
+
+agent.py:     întrebare ─► ReAct loop ─► search_documents / query_documents ─► pgvector ─► răspuns citat
+```
+
+## Cele 4 părți ale temei
+
+| # | Parte | Fișiere |
+|---|---|---|
+| 1 | **Extraction pipeline (L3)** — loader registry PDF/DOCX/TXT/CSV, chunking, schemă Pydantic, salvare JSON | `loaders.py`, `chunking.py`, `schemas.py`, `pipeline.py`, `prompts/doc_extract.yaml` |
+| 2 | **Postgres + Repository (L4)** — pgvector via Docker + Alembic, modele `Document` 1→N `DocumentChunk` | `docker-compose.yml`, `alembic/`, `database.py`, `models.py`, `repositories.py` |
+| 3 | **RAG cu embeddings (L4)** — sentence-transformers per chunk, cosine + HNSW, `RAGService.search` | `rag_service.py`, `create_index.py` (HNSW), `repositories.py` |
+| 4 | **Conectare la agent (L1–L2)** — două tool-uri pe documente (`search_documents` semantic + `query_documents` pe datele extrase) adăugate la agentul existent | `tools/rag_tools.py`, `tools/params_models.py`, `prompts/planner.yaml` |
 
 ## Structură
 
 ```
 proiect/
-├── agent.py                   # QAAgent + LLMFactory + main()
-├── tools/
-│   ├── __init__.py
-│   ├── registry.py            # TOOL_REGISTRY + @register_tool
-│   ├── params_models.py       # Pydantic BaseModel per tool
-│   ├── basic_tools.py         # calculator, get_datetime, web_search
-│   └── tool_wrapper.py        # ToolWrapper.call() + .catalog()
-├── prompts/
-│   ├── __init__.py
-│   ├── registry.py            # PromptRegistry (YAML + Jinja2)
-│   ├── planner.yaml
-│   ├── analyst.yaml
-│   ├── summary.yaml
-│   └── extract.yaml
+├── agent.py              # QAAgent + LLMFactory + ReAct loop (din Tema 1, neschimbat)
+├── pipeline.py           # load → chunk → extract → store  (entry point L3+L4)
+├── demo.py               # ingest + 3 întrebări către agent (demo end-to-end)
+│
+├── loaders.py            # LOADER_REGISTRY pe extensie (txt/pdf/docx/csv)
+├── chunking.py           # split(docs, 800, 100)
+├── schemas.py            # Invoice + Contract (Pydantic)
+│
+├── database.py           # engine + transaction() context manager
+├── models.py             # Document (1) → DocumentChunk (N), Vector(384)
+├── repositories.py       # DocumentRepository + similarity_search (cosine)
+├── rag_service.py        # RAGService: embed + search(query, top_k)
+│
+├── tools/                # din Tema 1 + rag_tools.py (search_documents + query_documents)
+├── prompts/              # din Tema 1 + doc_extract.yaml
+│
+├── alembic/ + alembic.ini   # migrația: extensia vector + tabele (documents, chunks)
+├── create_index.py          # indexul HNSW, separat de migrație (slide 70)
+├── docker-compose.yml       # pgvector pe portul 5434
+├── data/documents/          # corpus demo (facturi + contracte)
 ├── requirements.txt
 ├── .env.example
 └── README.md
@@ -30,76 +58,65 @@ proiect/
 ## Setup
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
-# editează .env și pune cheia ta (GOOGLE_API_KEY pentru Gemini)
+cp .env.example .env          # pune GOOGLE_API_KEY (Gemini) pentru extracție + răspuns agent
+
+# 1. Pornește Postgres + pgvector (port 5434)
+docker compose up -d
+
+# 2. Creează schema (extensie vector + tabele)
+alembic upgrade head
+
+# 3. Construiește indexul HNSW (separat: CREATE INDEX CONCURRENTLY nu merge în tranzacția Alembic)
+python create_index.py
 ```
 
 ## Rulare
 
 ```bash
-python agent.py "Câte zile sunt între azi și 1 ianuarie 2027? Caută pe web ce sărbătoare e atunci."
+# Ingest corpusul demo (load → chunk → extract → store)
+python pipeline.py
+#   sau fișiere specifice:  python pipeline.py data/documents/factura_001.txt
+
+# Întrebări către agent (folosește tool-ul search_documents)
+python agent.py "Ce clauze de reziliere/confidențialitate avem?"
+python agent.py "Care e termenul de plată al facturilor?"
+
+# Demo end-to-end (ingest + 3 întrebări)
+python demo.py
 ```
 
-Sau interactiv:
+> **Fără cheie LLM?** Storage-ul și căutarea RAG merg și fără: extracția structurată
+> e *best-effort* (dacă LLM-ul lipsește, `extracted` rămâne `null`, dar documentul și
+> chunk-urile se stochează normal). Doar extracția câmpurilor și răspunsul final al
+> agentului au nevoie de o cheie.
 
-```bash
-python agent.py
-# Întrebare: <scrie întrebarea>
-```
+## Convenții respectate (pe lângă cele din Tema 1)
 
-## Switch provider
+- **Loader = Registry Pattern pe extensie** (`LOADER_REGISTRY`: txt/pdf/docx/csv), importuri lazy
+  per loader. `CSVLoader` emite un Document per rând (potrivit pentru tabele, nu pentru proză lungă);
+  fără backend extra (modulul `csv` din stdlib).
+- **Tool-uri pe documente prin `@register_tool`** (nu `@tool`-ul LangChain) — ajung la agent prin
+  `ToolWrapper.catalog()` → `bind_tools()`, exact ca tool-urile existente. Două complementare:
+  `search_documents` (semantic, text liber) și `query_documents` (datele structurate extrase,
+  ca extracția din L3 să fie efectiv folosită la răspuns, nu doar salvată).
+- **Ingest idempotent**: re-procesarea aceluiași fișier înlocuiește documentul (constrângere
+  `UNIQUE(filename)` + `delete_by_filename`), nu îl duplică (migrația `0002`).
+- **Repository Pattern** ascunde SQL-ul; commit doar în `transaction()`, `flush()` în repo.
+- **`Document` 1→N `DocumentChunk`** cu `ondelete=CASCADE` + `UniqueConstraint(document_id, chunk_index)`.
+- **pgvector**: `Vector(384)`, cosine (`1 - cosine_distance`), **HNSW** `vector_cosine_ops`.
+- **Embeddings multilingve** (`paraphrase-multilingual-MiniLM-L12-v2`) pentru documente RO,
+  încărcate lazy o singură dată (singleton per proces).
+- **Alembic** pentru schema (slide 55), cu `CREATE EXTENSION` manual în `upgrade()`; indexul **HNSW**
+  se construiește separat în `create_index.py` via `engine.begin()` (slide 70), fiindcă
+  `CREATE INDEX CONCURRENTLY` nu poate rula în tranzacția unei migrații.
+- **Prompt de extracție în YAML** (`doc_extract.yaml`), nu hardcodat — Registry Pattern pentru prompt-uri.
 
-În `.env`:
+## Istoric pe branch-uri
 
-```
-DEFAULT_PROVIDER=ollama       # local, fără cheie (necesită ollama serve + llama3.2)
-DEFAULT_PROVIDER=gemini       # implicit, free tier
-DEFAULT_PROVIDER=anthropic    # paid
-```
+Fiecare temă e un branch peste cea anterioară (folderul `proiect/` evoluează):
 
-> **Notă:** doar unele modele Ollama suportă tool-calling de încredere
-> (`llama3.2`, `qwen2.5`). Gemini e cea mai sigură alegere pentru demo.
-
-## Cum funcționează pipeline-ul
-
-```
-Întrebare utilizator
-   │
-   ▼
-[planner system + tools] → ReAct loop (Think/Act/Observe ×N, tool calls în paralel)
-   │
-   ▼ raw_answer + trace
-[analyst]  → critică & rafinează
-   │
-   ▼ refined_answer
-[summary]  → format final user-facing
-   │
-   ▼ summary text
-[extract]  → {answer, key_facts, sources, tools_used} (JSON)
-```
-
-Output-ul `agent.ask(question)` conține:
-
-- `answer` — textul formatat de `summary`
-- `structured` — JSON-ul de la `extract`
-- `trace` — lista apelurilor de tool-uri (iterație, nume, args, rezultat)
-- `raw_answer`, `refined_answer` — pași intermediari, utili la debugging
-
-## Convenții respectate
-
-- `LLMFactory.create(provider, **kwargs)` — Factory pattern pentru switch între provideri
-- Pydantic `BaseModel` per tool cu `Field(description=...)` — schema vizibilă pentru LLM
-- `@register_tool` validează BaseModel unic + docstring ≥ 15 caractere
-- `ToolWrapper.call()` (lookup → validate → execute → return str) + `.catalog()`
-- Anatomia YAML: `name`, `version`, `description`, `prompt`
-- `PromptTemplate` dataclass `frozen=True`
-- `PromptRegistry._load()` + `.render()` cu Jinja2
-- `get_prompt_registry()` singleton
-- System prompt cu 5 secțiuni (rol / obiectiv / context / constrângeri / format)
-- Reminder block la final (Lost in the Middle)
-- `react_loop()` Think → Act → Observe
-- `asyncio.gather` pentru tool calls multiple în paralel
-- Erori human-readable, nu stack traces; loop continuă pe eroare
+- `main` — Tema 1 (L2): agent ReAct cu tools + prompts.
+- `homework2` — Tema 2 (L3+L4): **acest** Document Analyst cu RAG, peste agentul din `main`.
+- `homework3` — va porni din `homework2`, ș.a.m.d.

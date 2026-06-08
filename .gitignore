@@ -26,3 +26,6 @@ Thumbs.db
 *.egg-info/
 build/
 dist/
+
+# Output extras de pipeline (regenerabil) — sursele rămân în data/documents/
+proiect/data/extracted/

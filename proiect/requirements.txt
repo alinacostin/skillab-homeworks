@@ -1,3 +1,4 @@
+# --- Agent QA (L1-L2) ---
 langchain-core>=0.3
 langchain-ollama>=0.2
 langchain-google-genai>=2.0
@@ -7,3 +8,16 @@ pyyaml>=6.0
 jinja2>=3.1
 ddgs>=9.0
 python-dotenv>=1.0
+
+# --- Extraction pipeline (L3) ---
+langchain-community>=0.4
+langchain-text-splitters>=1.0
+pypdf>=4.0          
+docx2txt>=0.8       
+
+# --- Storage + RAG (L4) ---
+sqlalchemy>=2.0
+pgvector>=0.2
+psycopg2-binary>=2.9
+alembic>=1.13
+sentence-transformers>=2.2

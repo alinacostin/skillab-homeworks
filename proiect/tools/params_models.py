@@ -33,3 +33,30 @@ class WebSearchParams(BaseModel):
         ge=1,
         le=10,
     )
+
+
+class SearchDocumentsParams(BaseModel):
+    query: str = Field(
+        description="Întrebarea sau termenii de căutat în documentele încărcate (facturi, contracte).",
+        min_length=2,
+    )
+    top_k: int = Field(
+        default=3,
+        description="Numărul de fragmente relevante returnate.",
+        ge=1,
+        le=10,
+    )
+
+
+class QueryDocumentsParams(BaseModel):
+    doc_type: str = Field(
+        default="",
+        description="Filtru opțional pe tip: 'factura' sau 'contract'. Gol = toate tipurile.",
+    )
+    contains: str = Field(
+        default="",
+        description=(
+            "Filtru opțional: text căutat în numele fișierului sau numărul "
+            "documentului (ex: 'FV-2024-001', 'consultanta'). Gol = fără filtru."
+        ),
+    )

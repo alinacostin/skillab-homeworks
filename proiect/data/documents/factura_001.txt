@@ -1,0 +1,37 @@
+FACTURA FISCALA
+Nr. FV-2024-001
+Data: 15.03.2024
+
+FURNIZOR:
+SC TechPro Solutions SRL
+CUI: RO12345678
+J40/1234/2020
+Str. Victoriei nr. 45, Sector 1, București
+Cont IBAN: RO49AAAA1B31007593840000
+
+CLIENT:
+SC Digital Services SRL
+CUI: RO87654321
+J40/5678/2019
+Bd. Unirii nr. 12, Sector 3, București
+
+PRODUSE/SERVICII:
+--------------------------------------------------------------------------------
+Nr. | Denumire                        | UM   | Cantitate | Preț unitar | Valoare
+--------------------------------------------------------------------------------
+1   | Laptop Dell Latitude 5540       | buc  | 2         | 4.500,00    | 9.000,00
+2   | Monitor LG 27" 4K               | buc  | 4         | 1.200,00    | 4.800,00
+3   | Tastatură mecanică Logitech     | buc  | 4         | 350,00      | 1.400,00
+--------------------------------------------------------------------------------
+
+SUBTOTAL:                                                         15.200,00 RON
+TVA (19%):                                                         2.888,00 RON
+--------------------------------------------------------------------------------
+TOTAL DE PLATĂ:                                                   18.088,00 RON
+
+Termen de plată: 30 zile de la emitere
+Modalitate de plată: Transfer bancar
+
+Întocmit de: Maria Ionescu
+Semnătura furnizor: _________________
+

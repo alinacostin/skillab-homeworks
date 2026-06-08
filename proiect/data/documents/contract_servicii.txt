@@ -1,0 +1,91 @@
+CONTRACT DE PRESTĂRI SERVICII IT
+Nr. CS-2024-015
+Data încheierii: 01.03.2024
+
+I. PĂRȚILE CONTRACTANTE
+
+1.1 PRESTATOR:
+SC CloudTech Services SRL
+CUI: RO11223344
+J40/1122/2019
+Sediul: Str. Inovației nr. 25, Sector 2, București
+Reprezentant legal: Andrei Georgescu, Director General
+Tel: +40 21 123 4567
+Email: contact@cloudtech.ro
+
+1.2 BENEFICIAR:
+SC Manufacturing Pro SRL
+CUI: RO55667788
+J35/4455/2017
+Sediul: Str. Industrială nr. 100, Brașov
+Reprezentant legal: Elena Dumitrescu, Administrator
+Tel: +40 268 987 654
+Email: office@manufacturingpro.ro
+
+II. OBIECTUL CONTRACTULUI
+
+2.1 Prestatorul se obligă să furnizeze Beneficiarului următoarele servicii IT:
+- Implementare sistem ERP pentru managementul producției
+- Migrare date din sistemul vechi
+- Configurare și personalizare module
+- Suport tehnic și mentenanță
+
+III. VALOAREA CONTRACTULUI
+
+3.1 Valoarea totală a contractului: 45.000,00 EUR (fără TVA)
+3.2 TVA (19%): 8.550,00 EUR
+3.3 Valoare totală cu TVA: 53.550,00 EUR
+
+3.4 Plata se efectuează în 3 tranșe:
+- 40% la semnarea contractului: 21.420,00 EUR
+- 40% la finalizarea implementării: 21.420,00 EUR
+- 20% la recepția finală: 10.710,00 EUR
+
+IV. DURATA CONTRACTULUI
+
+4.1 Durata contractului: 6 luni
+4.2 Data începerii: 01.03.2024
+4.3 Data finalizării: 31.08.2024
+
+V. OBLIGAȚIILE PRESTATORULUI
+
+5.1 Prestatorul se obligă să:
+- Analizeze cerințele și procesele de business ale Beneficiarului
+- Configureze și personalizeze sistemul ERP conform specificațiilor
+- Migreze datele existente cu verificarea integrității
+- Asigure training pentru utilizatori (minimum 40 ore)
+- Furnizeze documentație tehnică și manuale de utilizare
+- Asigure suport tehnic în perioada de garanție (12 luni)
+- Respecte termenele de livrare agreate
+- Păstreze confidențialitatea informațiilor primite
+
+VI. OBLIGAȚIILE BENEFICIARULUI
+
+6.1 Beneficiarul se obligă să:
+- Furnizeze toate informațiile necesare implementării
+- Asigure accesul la infrastructura IT existentă
+- Desemneze o echipă de proiect pentru colaborare
+- Efectueze plățile conform graficului stabilit
+- Participe la sesiunile de training și testare
+
+VII. ÎNCETAREA ȘI REZILIEREA CONTRACTULUI
+
+7.1 Contractul încetează la expirarea duratei sau prin acordul scris al ambelor părți.
+7.2 Oricare dintre părți poate rezilia contractul printr-un preaviz scris de 30 de zile.
+7.3 În caz de neexecutare culpabilă a obligațiilor, partea prejudiciată poate rezilia de plin drept contractul, după o notificare prealabilă de 15 zile, fără intervenția instanței.
+
+VIII. DISPOZIȚII FINALE
+
+8.1 Litigiile se vor soluționa pe cale amiabilă sau prin instanțele competente din București.
+8.2 Modificările contractului se fac numai prin act adițional.
+
+Încheiat astăzi, 01.03.2024, în 2 exemplare originale.
+
+PRESTATOR:                              BENEFICIAR:
+SC CloudTech Services SRL               SC Manufacturing Pro SRL
+Andrei Georgescu                        Elena Dumitrescu
+Director General                        Administrator
+
+_________________                       _________________
+(semnătura și ștampila)                 (semnătura și ștampila)
+

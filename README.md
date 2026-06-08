@@ -2,24 +2,34 @@
 
 Repository containing my solutions to the Skillab AI/LLM course homeworks.
 
-## Structure
+## Model pe branch-uri
 
-Each homework lives in its own subfolder, scoped to its own `proiect/` (mirroring the trainer's expected layout):
+Fiecare temă este rezolvată pe **propriul branch**, pornit din branch-ul temei anterioare.
+Folderul `proiect/` evoluează cumulativ — fiecare temă adaugă peste agentul/infra-ul de dinainte
+(tema 2 cheamă agentul din tema 1, tema 3 va construi peste tema 2 etc.).
+
+| Temă | Lecție | Branch | Pornit din | Subiect |
+|---|---|---|---|---|
+| 1 | L2 (`hw2.pdf`) | `main` | — | Agent QA ReAct cu tools + prompts |
+| 2 | L3+L4 (`hw4.pdf`) | `homework2` | `main` | Document Analyst cu RAG (extracție + pgvector + tool RAG) |
+| 3 | … | `homework3` | `homework2` | (urmează) |
 
 ```
 .
-├── proiect/             # Lesson-2 homework: ReAct QA agent with tools + prompts
-└── README.md            # (this file)
+├── proiect/             # soluția temei de pe branch-ul curent
+└── README.md            # (acest fișier)
 ```
 
-When new homeworks land they'll be added as `homework2/proiect/`, `homework3/proiect/`, etc.
+## Tema curentă pe acest branch
 
-## Current homework: Lesson 2 — Agent QA cu Tools + Prompts
+Vezi [`proiect/README.md`](proiect/README.md) pentru descrierea completă, setup și rulare.
 
-See [`proiect/README.md`](proiect/README.md) for the full description, setup, and run instructions of the lesson-2 ReAct agent.
-
-Quick summary:
-- **Tools layer** (`proiect/tools/`) — Pydantic params + `@register_tool` decorator + `ToolWrapper` (calculator, get_datetime, web_search)
-- **Prompts layer** (`proiect/prompts/`) — YAML templates + Jinja2 (planner, analyst, summary, extract)
-- **Agent** (`proiect/agent.py`) — `QAAgent` + `LLMFactory` + ReAct loop with parallel tool execution + 4-prompt pipeline
-- **Providers** — Ollama / Gemini / Anthropic via `LLMFactory` (switch via `.env`)
+- **`main`** — Agent QA ReAct: tools (`@register_tool` + `ToolWrapper`), prompts YAML
+  (planner → analyst → summary → extract), `LLMFactory` (Ollama / Gemini / Anthropic).
+- **`homework2`** — Document Analyst cu RAG peste agentul din `main`:
+  - Extraction pipeline (L3): loader registry PDF/DOCX/TXT → chunking → `Invoice`/`Contract`
+    cu `with_structured_output` → JSON.
+  - Storage (L4): Postgres + pgvector via Docker + Alembic; `Document` 1→N `DocumentChunk`;
+    Repository Pattern.
+  - RAG (L4): embeddings sentence-transformers per chunk, cosine + HNSW, `RAGService.search`.
+  - Integrare: RAG wrappat ca tool `search_documents` și adăugat la agentul existent.

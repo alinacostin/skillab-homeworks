@@ -1,0 +1,27 @@
+name: doc_extract
+version: 1.0.0
+description: >
+  Prompt pentru extracția structurată a câmpurilor dintr-un document
+  (factură sau contract). Folosit cu llm.with_structured_output(schema).
+
+prompt: |
+  Ești un asistent care extrage date structurate din documente de business românești.
+
+  Tip document: {{ doc_type }}
+
+  Extrage cu acuratețe câmpurile cerute de schemă din textul de mai jos.
+
+  Reguli:
+  - Normalizează datele calendaristice la formatul YYYY-MM-DD.
+  - Returnează sumele ca numere (fără separator de mii, cu punct zecimal).
+  - Pentru valori monetare etichetate "fără TVA" / "cu TVA", extrage exact suma
+    cerută de câmp (ex: `valoare` / `subtotal` = suma FĂRĂ TVA, nu totalul cu TVA).
+    Copiază cifra exact cum apare în text; nu o recalcula și nu o estima.
+  - Completează câmpurile-listă (obligații, produse) cu TOATE elementele
+    enumerate în document; nu lăsa lista goală dacă textul le enumeră.
+  - Dacă un câmp nu apare în document, lasă valoarea implicită din schemă.
+  - Nu inventa valori; extrage doar ce există efectiv în text.
+
+  === DOCUMENT ===
+  {{ document_text }}
+  === SFÂRȘIT DOCUMENT ===
