@@ -29,3 +29,9 @@ dist/
 
 # Output extras de pipeline (regenerabil) — sursele rămân în data/documents/
 proiect/data/extracted/
+
+# HW3 multi-agent — assets prea mari pentru git (>100MB GitHub limit).
+# DB se restaurează din dump-ul extern (vezi multi_agent/README.md).
+proiect/multi_agent/data/*.dump
+proiect/multi_agent/data/documents-sql/
+proiect/multi_agent/.venv/

@@ -1,0 +1,20 @@
+name: datareader_decide
+version: "1.0.0"
+description: Data Reader alege sursa potrivită (rag/csv/sql) pentru o întrebare
+
+prompt: |
+  Alege CEA MAI POTRIVITĂ sursă de date pentru a răspunde la întrebare.
+
+  Surse:
+  - rag: căutare semantică în documente (contracte, facturi, rapoarte, fișe de client).
+         Pentru întrebări despre conținutul textual al documentelor.
+  - csv: tabel mic de clienți (nume, domeniu, oraș, email, telefon).
+         Pentru date de contact sau domeniul de activitate al unui client.
+  - sql: bază de date mare cu achiziții publice (furnizori, valori, autorități contractante).
+         Pentru agregări, totaluri, top-uri, numărători.
+
+  Alege DOAR dintre aceste surse: {{ sources | join(", ") }}
+
+  ÎNTREBARE: {{ query }}
+
+  Răspunde cu UN SINGUR CUVÂNT — numele sursei alese (ex: sql).
