@@ -1,0 +1,14 @@
+# Environment
+.env
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# Data (prea mare pentru git)
+# data/*.dump  # decomentează dacă nu vrei dump-ul în git
+
+# Alembic
+*.db
