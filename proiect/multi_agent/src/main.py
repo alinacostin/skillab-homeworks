@@ -111,6 +111,7 @@ def demo_supervisor(llm):
     from supervisor import Supervisor
     sup = Supervisor(llm=llm)
     for q in ["Care sunt primii 3 furnizori după valoarea totală?",
+              "Ce email și telefon are DataPro?",
               "Câte achiziții directe sunt în total, și ce spune documentul despre contractul cu CloudNet?"]:
         res = sup.run(q)
         print(f"\nQ: {q}\n  intent={res.get('intent')} workers={res.get('workers')} status={res.get('status')}\n  {res.get('answer','')[:320]}")
