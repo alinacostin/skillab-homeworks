@@ -35,3 +35,4 @@ proiect/data/extracted/
 proiect/multi_agent/data/*.dump
 proiect/multi_agent/data/documents-sql/
 proiect/multi_agent/.venv/
+proiect/multi_agent/TESTING.md
