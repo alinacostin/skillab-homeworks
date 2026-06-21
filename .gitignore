@@ -30,6 +30,10 @@ dist/
 # Output extras de pipeline (regenerabil) — sursele rămân în data/documents/
 proiect/data/extracted/
 
+# HW4 — model intent antrenat (regenerabil cu `python -m intent.train_intent`)
+proiect/intent/*.joblib
+
+
 # HW3 multi-agent — assets prea mari pentru git (>100MB GitHub limit).
 # DB se restaurează din dump-ul extern (vezi multi_agent/README.md).
 proiect/multi_agent/data/*.dump

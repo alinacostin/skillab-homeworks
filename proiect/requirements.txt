@@ -21,3 +21,6 @@ pgvector>=0.2
 psycopg2-binary>=2.9
 alembic>=1.13
 sentence-transformers>=2.2
+
+# --- Intent classifier — TF-IDF + LogisticRegression ---
+scikit-learn>=1.3   # joblib vine ca dependență

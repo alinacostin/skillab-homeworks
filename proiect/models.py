@@ -73,3 +73,59 @@ class DocumentChunk(Base):
 
     def __repr__(self) -> str:
         return f"<DocumentChunk doc={self.document_id} idx={self.chunk_index}>"
+
+
+# ============================================================
+# Conversation Memory — sessions (1) → chat_messages (N)
+# Persistă istoricul conversațiilor pentru long-term storage / context
+# între request-uri (supraviețuiește restart-urilor).
+# ============================================================
+
+
+class ChatSession(Base):
+    """O conversație unică (un session_id). Ține user-ul și metadata."""
+
+    __tablename__ = "sessions"
+
+    # session_id ca string (UUID sau nume liber) — ales de apelant.
+    id = Column(String(64), primary_key=True)
+    user_id = Column(String(64), nullable=False, index=True)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    # 'metadata' e rezervat în SQLAlchemy → folosim 'meta'.
+    meta = Column(JSONB, nullable=True)
+
+    messages = relationship(
+        "ChatMessage",
+        back_populates="session",
+        cascade="all, delete-orphan",
+        order_by="ChatMessage.id",
+    )
+
+    def __repr__(self) -> str:
+        return f"<ChatSession id={self.id!r} user={self.user_id!r}>"
+
+
+class ChatMessage(Base):
+    """Un mesaj din conversație: role (user/assistant) + content + timestamp."""
+
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(
+        String(64),
+        ForeignKey("sessions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    role = Column(String(16), nullable=False)  # "user" | "assistant"
+    content = Column(Text, nullable=False)
+    timestamp = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    session = relationship("ChatSession", back_populates="messages")
+
+    def __repr__(self) -> str:
+        return f"<ChatMessage {self.role} sess={self.session_id!r}>"

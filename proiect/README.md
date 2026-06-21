@@ -1,11 +1,67 @@
-# Document Analyst cu RAG (Tema 2 — L3 + L4)
+# Document Analyst cu RAG (Tema 2)
 
-Pipeline de **extracție + storage cu pgvector**, conectat la agentul ReAct din Tema 1
-(L1–L2). Documentele (facturi / contracte) sunt încărcate, fragmentate, extrase
+Pipeline de **extracție + storage cu pgvector**, conectat la agentul ReAct din Tema 1.
+Documentele (facturi / contracte) sunt încărcate, fragmentate, extrase
 structurat, vectorizate și stocate în Postgres; agentul răspunde la întrebări despre
 ele printr-un tool RAG `search_documents`.
 
 > Construit pe agentul din Tema 1 (`main`) — vezi secțiunea *Istoric pe branch-uri*.
+
+---
+
+## Tema 4 — Memory, Caching & Intent Classifier
+
+> Branch `homework4`. Trei optimizări aplicate **agentului din Tema 1** (`QAAgent`), exact
+> ca în `hw8.pdf`.
+
+| # | Parte | Ce face | Fișiere |
+|---|---|---|---|
+| 1 | **Conversation Memory** | `ConversationMemory` persistentă în PostgreSQL: `ask()` face load → invoke → save pe `session_id`; contextul supraviețuiește restart-urilor | `models.py` (`ChatSession`/`ChatMessage`), `memory.py` (`PersistentMemory`), `alembic/versions/0003_*`, `agent.py` |
+| 2 | **Prompt Caching** | Anthropic `cache_control: ephemeral` pe system prompt (prefix static) → ~90% mai puțini tokeni de input la apelurile următoare; usage măsurat | `agent.py` (`_system_message`), `benchmark_prompt_cache.py` |
+| 3 | **Intent Classifier** | TF-IDF + LogisticRegression (`search`/`extract`/`summarize`) înlocuiește un apel LLM de routing; fallback la LLM când `confidence < prag` | `intent/` (`intent_data.py`, `train_intent.py`, `classifier.py`), `benchmark_intent.py`, `agent.py` |
+
+### Cum funcționează în `agent.py` (`ask`)
+
+```
+0. intent  → detect_intent (sklearn)   ; sub prag → fallback LLM
+1. memory  → load_messages(session_id) ; istoricul injectat în loop-ul ReAct
+2. ReAct   → system prompt cu cache_control (Anthropic) ; usage acumulat
+3. analyst → summary → extract (extract rulează doar pentru intent „extract")
+4. memory  → save_turn(session_id, user, assistant)   ; persistat în Postgres
+```
+
+### Rulare (Tema 4)
+
+```bash
+docker compose up -d && alembic upgrade head      # creează și tabelele memory (migrația 0003)
+
+# Part 3 — antrenează classifier-ul (o singură dată) + benchmark LLM vs sklearn
+python -m intent.train_intent
+python benchmark_intent.py
+
+# Part 2 — măsoară prompt caching (cere ANTHROPIC_API_KEY)
+DEFAULT_PROVIDER=anthropic DEFAULT_MODEL= python benchmark_prompt_cache.py
+
+# Part 1 — memory care supraviețuiește „restart-ului"
+DEFAULT_PROVIDER=anthropic DEFAULT_MODEL= python demo.py memory
+#   sau manual, două procese separate:
+DEFAULT_PROVIDER=anthropic DEFAULT_MODEL= SESSION_ID=andrei python agent.py "Mă numesc Andrei, lucrez cu DataPro."
+DEFAULT_PROVIDER=anthropic DEFAULT_MODEL= SESSION_ID=andrei python agent.py "Cum mă numesc?"
+```
+
+### Rezultate măsurate (validare locală)
+
+- **Intent**: held-out accuracy 100% (24 exemple); sklearn ~0.4 ms/query vs LLM ~sute de ms; cost ~$0.01 vs ~$20 / 1000 calls.
+- **Prompt caching**: prefix de 7212 tokeni scris în cache (apel 1) și servit din cache (apel 2) → **~90% reducere** pe inputul cache-uit. Pe agentul real, system prompt-ul (planner + tool catalog ≈ 2157 tokeni, peste pragul de 2048 al Sonnet 4.x) se cache-uiește efectiv.
+- **Memory**: turele se persistă în `chat_messages`; un agent nou (proces nou) reîncarcă istoricul din Postgres.
+
+### Note / decizii
+
+- **Integrare în loop-ul ReAct, nu într-un nod LangGraph.** Brief-ul zice „nod LangGraph", dar agentul Temei 1 e un loop ReAct hand-built (convențiile cursului interzic LangGraph în acest stack). Memoria intră în `ask()`/`_react_loop`. Varianta LangGraph-native (`MessagesState` + checkpointer) există deja în `multi_agent/` din Tema 3.
+- **Caching = doar Anthropic.** Auto-pornit când `DEFAULT_PROVIDER=anthropic`. Prag minim de prefix: 1024 tok (Claude 3.x) / 2048 (Sonnet 4.x) — sub prag nu se activează (fără eroare). ⚠️ `DEFAULT_MODEL` se trimite verbatim provider-ului → lasă-l gol când treci pe anthropic (altfel un `llama3.2` rămas în `.env` dă 404).
+- **Etichete intent**: `search/extract/summarize`, conform brief-ului.
+
+---
 
 ## Flow
 
@@ -21,18 +77,23 @@ agent.py:     întrebare ─► ReAct loop ─► search_documents / query_docum
 
 | # | Parte | Fișiere |
 |---|---|---|
-| 1 | **Extraction pipeline (L3)** — loader registry PDF/DOCX/TXT/CSV, chunking, schemă Pydantic, salvare JSON | `loaders.py`, `chunking.py`, `schemas.py`, `pipeline.py`, `prompts/doc_extract.yaml` |
-| 2 | **Postgres + Repository (L4)** — pgvector via Docker + Alembic, modele `Document` 1→N `DocumentChunk` | `docker-compose.yml`, `alembic/`, `database.py`, `models.py`, `repositories.py` |
-| 3 | **RAG cu embeddings (L4)** — sentence-transformers per chunk, cosine + HNSW, `RAGService.search` | `rag_service.py`, `create_index.py` (HNSW), `repositories.py` |
-| 4 | **Conectare la agent (L1–L2)** — două tool-uri pe documente (`search_documents` semantic + `query_documents` pe datele extrase) adăugate la agentul existent | `tools/rag_tools.py`, `tools/params_models.py`, `prompts/planner.yaml` |
+| 1 | **Extraction pipeline** — loader registry PDF/DOCX/TXT/CSV, chunking, schemă Pydantic, salvare JSON | `loaders.py`, `chunking.py`, `schemas.py`, `pipeline.py`, `prompts/doc_extract.yaml` |
+| 2 | **Postgres + Repository** — pgvector via Docker + Alembic, modele `Document` 1→N `DocumentChunk` | `docker-compose.yml`, `alembic/`, `database.py`, `models.py`, `repositories.py` |
+| 3 | **RAG cu embeddings** — sentence-transformers per chunk, cosine + HNSW, `RAGService.search` | `rag_service.py`, `create_index.py` (HNSW), `repositories.py` |
+| 4 | **Conectare la agent** — două tool-uri pe documente (`search_documents` semantic + `query_documents` pe datele extrase) adăugate la agentul existent | `tools/rag_tools.py`, `tools/params_models.py`, `prompts/planner.yaml` |
 
 ## Structură
 
 ```
 proiect/
-├── agent.py              # QAAgent + LLMFactory + ReAct loop (din Tema 1, neschimbat)
-├── pipeline.py           # load → chunk → extract → store  (entry point L3+L4)
-├── demo.py               # ingest + 3 întrebări către agent (demo end-to-end)
+├── agent.py              # QAAgent + LLMFactory + ReAct loop + intent/memory/cache (T1 + T4)
+├── pipeline.py           # load → chunk → extract → store  (entry point)
+├── demo.py               # demo end-to-end: `rag` (default) + `memory` (T4)
+│
+├── memory.py             # T4·1: PersistentMemory (conversation memory → Postgres)
+├── intent/               # T4·3: TF-IDF + LogReg (intent_data, train_intent, classifier)
+├── benchmark_intent.py   # T4·3: LLM vs sklearn (latență/cost/accuracy)
+├── benchmark_prompt_cache.py  # T4·2: măsoară prompt caching Anthropic
 │
 ├── loaders.py            # LOADER_REGISTRY pe extensie (txt/pdf/docx/csv)
 ├── chunking.py           # split(docs, 800, 100)
@@ -47,7 +108,7 @@ proiect/
 ├── prompts/              # din Tema 1 + doc_extract.yaml
 │
 ├── alembic/ + alembic.ini   # migrația: extensia vector + tabele (documents, chunks)
-├── create_index.py          # indexul HNSW, separat de migrație (slide 70)
+├── create_index.py          # indexul HNSW, separat de migrație
 ├── docker-compose.yml       # pgvector pe portul 5434
 ├── data/documents/          # corpus demo (facturi + contracte)
 ├── requirements.txt
@@ -100,7 +161,7 @@ python demo.py
 - **Tool-uri pe documente prin `@register_tool`** (nu `@tool`-ul LangChain) — ajung la agent prin
   `ToolWrapper.catalog()` → `bind_tools()`, exact ca tool-urile existente. Două complementare:
   `search_documents` (semantic, text liber) și `query_documents` (datele structurate extrase,
-  ca extracția din L3 să fie efectiv folosită la răspuns, nu doar salvată).
+  ca extracția să fie efectiv folosită la răspuns, nu doar salvată).
 - **Ingest idempotent**: re-procesarea aceluiași fișier înlocuiește documentul (constrângere
   `UNIQUE(filename)` + `delete_by_filename`), nu îl duplică (migrația `0002`).
 - **Repository Pattern** ascunde SQL-ul; commit doar în `transaction()`, `flush()` în repo.
@@ -108,8 +169,8 @@ python demo.py
 - **pgvector**: `Vector(384)`, cosine (`1 - cosine_distance`), **HNSW** `vector_cosine_ops`.
 - **Embeddings multilingve** (`paraphrase-multilingual-MiniLM-L12-v2`) pentru documente RO,
   încărcate lazy o singură dată (singleton per proces).
-- **Alembic** pentru schema (slide 55), cu `CREATE EXTENSION` manual în `upgrade()`; indexul **HNSW**
-  se construiește separat în `create_index.py` via `engine.begin()` (slide 70), fiindcă
+- **Alembic** pentru schema, cu `CREATE EXTENSION` manual în `upgrade()`; indexul **HNSW**
+  se construiește separat în `create_index.py` via `engine.begin()`, fiindcă
   `CREATE INDEX CONCURRENTLY` nu poate rula în tranzacția unei migrații.
 - **Prompt de extracție în YAML** (`doc_extract.yaml`), nu hardcodat — Registry Pattern pentru prompt-uri.
 
@@ -117,6 +178,7 @@ python demo.py
 
 Fiecare temă e un branch peste cea anterioară (folderul `proiect/` evoluează):
 
-- `main` — Tema 1 (L2): agent ReAct cu tools + prompts.
-- `homework2` — Tema 2 (L3+L4): **acest** Document Analyst cu RAG, peste agentul din `main`.
-- `homework3` — va porni din `homework2`, ș.a.m.d.
+- `main` — Tema 1: agent ReAct cu tools + prompts.
+- `homework2` — Tema 2: Document Analyst cu RAG, peste agentul din `main`.
+- `homework3` — Tema 3: sistem multi-agent cu LangGraph (subarborele `multi_agent/`).
+- `homework4` — Tema 4: **memory + caching + intent classifier**, aplicate agentului din Tema 1 (vezi secțiunea *Tema 4* de mai sus).
