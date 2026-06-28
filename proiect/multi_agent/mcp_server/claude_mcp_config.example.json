@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "document-agents": {
+      "command": "/Users/alinacostin/learning/Skillab/homework/proiect/.venv/bin/python",
+      "args": [
+        "/Users/alinacostin/learning/Skillab/homework/proiect/multi_agent/mcp_server/server.py"
+      ],
+      "env": {
+        "GUARDRAIL_EMBEDDING": "0",
+        "GUARDRAIL_LLM_JUDGE": "0"
+      }
+    }
+  }
+}
